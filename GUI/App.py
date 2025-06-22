@@ -1,52 +1,48 @@
 import tkinter as tk
-from utils.utils import *
-from GUI.ui import *
+from tkinter import ttk
+from GUI.Mode1UI import Mode1UI
+from GUI.Mode2UI import Mode2UI
 
-class FileSelectorApp:
+class App:
     def __init__(self, root):
         self.root = root
         self.root.title("파일 선택기")
-        # 창 크기 설정 (기본값: 400x200)
         self.root.geometry("800x400")
 
-        self.selected_file_path_1 = None 
-        self.df = None
-
-        # 라벨 생성
-        self.label, self.label_var = create_label(root, "파일을 선택해주세요.")
+        # 모드 선택 변수
+        self.mode_var = tk.StringVar()
         
-        # 첫 번째 파일 선택 버튼
-        self.file_button_1 = create_button(root, "첫 번째 파일 선택", self.on_select_file_1)
+        # 모드 UI 인스턴스
+        self.mode1_ui = Mode1UI(root)
+        self.mode2_ui = Mode2UI(root)
+        
+        # 선택박스 생성
+        self.create_mode_selector()
 
-        # 실행 버튼
-        self.run_button = create_button(root, "Run", self.run_files)
+    def create_mode_selector(self):
+        selector_frame = ttk.Frame(self.root)
+        selector_frame.pack(pady=10)
 
-        # 체크박스 프레임 초기화
-        self.checkbox_frame, self.checkboxes = create_checkbox_frame(root)
+        ttk.Label(selector_frame, text="모드 선택:").pack(side='left', padx=5)
 
-    def on_select_file_1(self):
-        # 첫 번째 파일 선택 대화상자 열기
-        path = select_file_path()
-        if path:
-            self.selected_file_path_1 = path
-            self.label_var.set(f"첫 번째 파일 선택됨: {path}")
-        else:
-            self.label_var.set("첫 번째 파일이 선택되지 않았습니다.")
+        mode_combo = ttk.Combobox(selector_frame, 
+                                 textvariable=self.mode_var,
+                                 values=["선택하세요", "1번 모드", "2번 모드"],
+                                 state="readonly")
+        mode_combo.pack(side='left', padx=5)
+        mode_combo.set("선택하세요")
+        
+        mode_combo.bind('<<ComboboxSelected>>', self.on_mode_change)
 
-    def run_files(self):
-        # 두 파일 경로를 확인하고 처리
-        if self.selected_file_path_1:
-            df = excel_to_df(self.selected_file_path_1)
-            self.df = df
-            self.label_var.set(f"파일이 성공적으로 로드되었습니다: {self.selected_file_path_1}")
-
-             # 기존 체크박스들 제거
-            for widget in self.checkbox_frame.winfo_children():
-                widget.destroy()
-            self.checkboxes.clear()
-            
-            # 컬럼별로 체크박스 추가
-            for column in df.columns:
-                add_checkbox(self.checkbox_frame, self.checkboxes, column)
-            print(self.df)
-            print(f"첫 번째 파일: {self.selected_file_path_1}")
+    def on_mode_change(self, event):
+        selected_mode = self.mode_var.get()
+        
+        # 모든 모드 UI 숨기기
+        self.mode1_ui.hide_widgets()
+        self.mode2_ui.hide_widgets()
+        
+        # 선택된 모드에 따라 UI 표시
+        if selected_mode == "1번 모드":
+            self.mode1_ui.show_widgets()
+        elif selected_mode == "2번 모드":
+            self.mode2_ui.show_widgets()
